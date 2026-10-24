@@ -1,0 +1,4 @@
+jp.katsunori.notifyforwarder.test.app-androidTest-0 C:\tmp\NotifyForwarder\app\build\generated\res\resValues\androidTest\debug
+jp.katsunori.notifyforwarder.test.app-mergeDebugAndroidTestResources-1 C:\tmp\NotifyForwarder\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
+jp.katsunori.notifyforwarder.test.app-mergeDebugAndroidTestResources-2 C:\tmp\NotifyForwarder\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
+jp.katsunori.notifyforwarder.test.app-debugAndroidTest-3 C:\tmp\NotifyForwarder\app\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources

@@ -1,0 +1,4 @@
+com.example.shoppinglist.test.app-androidTest-0 C:\tmp\ShoppingList\app\build\generated\res\resValues\androidTest\debug
+com.example.shoppinglist.test.app-mergeDebugAndroidTestResources-1 C:\tmp\ShoppingList\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
+com.example.shoppinglist.test.app-mergeDebugAndroidTestResources-2 C:\tmp\ShoppingList\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
+com.example.shoppinglist.test.app-debugAndroidTest-3 C:\tmp\ShoppingList\app\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources

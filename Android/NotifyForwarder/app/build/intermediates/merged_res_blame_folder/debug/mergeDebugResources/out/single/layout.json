@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "jp.katsunori.notifyforwarder.app-mergeDebugResources-34:/layout/activity_excluded_apps.xml",
+        "source": "jp.katsunori.notifyforwarder.app-main-37:/layout/activity_excluded_apps.xml"
+    },
+    {
+        "merged": "jp.katsunori.notifyforwarder.app-mergeDebugResources-34:/layout/activity_main.xml",
+        "source": "jp.katsunori.notifyforwarder.app-main-37:/layout/activity_main.xml"
+    },
+    {
+        "merged": "jp.katsunori.notifyforwarder.app-mergeDebugResources-34:/layout/item_excluded_app.xml",
+        "source": "jp.katsunori.notifyforwarder.app-main-37:/layout/item_excluded_app.xml"
+    }
+]

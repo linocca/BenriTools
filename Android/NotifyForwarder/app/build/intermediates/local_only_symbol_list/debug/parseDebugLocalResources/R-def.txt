@@ -1,0 +1,27 @@
+R_DEF: Internal format may change without notice
+local
+drawable ic_launcher
+id buttonExcludedApps
+id buttonOpenNotificationSettings
+id buttonRequestSmsPermission
+id buttonSave
+id buttonSaveExcluded
+id checkboxApp
+id editEmailAppPassword
+id editEmailFrom
+id editEmailTo
+id editPhoneNumber
+id editSearch
+id listApps
+id radioGroupMethod
+id radioMethodBoth
+id radioMethodEmail
+id radioMethodSms
+id textAppLabel
+id textAppPackage
+id textStatus
+layout activity_excluded_apps
+layout activity_main
+layout item_excluded_app
+string app_name
+style Theme.NotifyForwarder

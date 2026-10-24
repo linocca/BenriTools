@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.NotifyForwarder" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
+</resources>

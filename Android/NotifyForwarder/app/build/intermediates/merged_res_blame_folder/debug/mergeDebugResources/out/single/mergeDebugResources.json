@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "jp.katsunori.notifyforwarder.app-debug-35:/layout_activity_main.xml.flat",
+        "source": "jp.katsunori.notifyforwarder.app-main-37:/layout/activity_main.xml"
+    },
+    {
+        "merged": "jp.katsunori.notifyforwarder.app-debug-35:/layout_activity_excluded_apps.xml.flat",
+        "source": "jp.katsunori.notifyforwarder.app-main-37:/layout/activity_excluded_apps.xml"
+    },
+    {
+        "merged": "jp.katsunori.notifyforwarder.app-debug-35:/layout_item_excluded_app.xml.flat",
+        "source": "jp.katsunori.notifyforwarder.app-main-37:/layout/item_excluded_app.xml"
+    },
+    {
+        "merged": "jp.katsunori.notifyforwarder.app-debug-35:/drawable_ic_launcher.xml.flat",
+        "source": "jp.katsunori.notifyforwarder.app-main-37:/drawable/ic_launcher.xml"
+    }
+]
