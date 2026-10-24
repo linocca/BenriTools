@@ -1,2 +1,2 @@
 @echo off
-start "" pythonw "C:\work\MyCapture\pycapture.py"
+start "" pythonw "C:\work\git\BenriTools\Python\MyCapture\pycapture.py"

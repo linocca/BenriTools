@@ -1,2 +1,2 @@
 @echo off
-start "" pythonw "C:\work\VideoChain\video_chain.py"
+start "" pythonw "C:\work\git\BenriTools\Python\VideoChain\video_chain.py"

@@ -1,2 +1,2 @@
 @echo off
-start "" pythonw "C:\work\CostCalc\cost_calc.py"
+start "" pythonw "C:\work\git\BenriTools\Python\CostCalc\cost_calc.py"
