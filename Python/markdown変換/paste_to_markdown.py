@@ -7,7 +7,9 @@ Copilotなどからコピーしたリッチテキスト＝HTML）をMarkdownに
 変換するための、Windows専用の簡易GUIツールです。
 
 ■ 事前準備（初回のみ、コマンドプロンプトで実行）
-    pip install pywin32 markdownify beautifulsoup4
+    pip install pywin32 markdownify beautifulsoup4 markdown
+    （PDF出力には markdown が必要です。ブラウザは Windows標準の Edge、
+      または Chrome を自動で探して使います。追加インストールは不要です）
 
 ■ 使い方
     1) 変換したい文章をコピーしておく
@@ -22,14 +24,21 @@ Copilotなどからコピーしたリッチテキスト＝HTML）をMarkdownに
          インデント行を判定してMarkdownに整形します
     4) 結果は右側に表示されます。
        「結果をコピー」でクリップボードに戻す、
-       「.mdで保存」でファイルに保存できます。
+       「.mdで保存」でファイルに保存、
+       「PDFで保存」で出力欄のMarkdownをPDFにして保存できます。
+       （出力欄を手で直してからPDF化してもOKです）
 
     直接、下の「入力」欄にテキストを貼り付けて
     「入力欄のテキストを変換」ボタンで変換することもできます
     （この場合はプレーンテキストとして処理されます）。
 """
 
+import os
 import re
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 
@@ -47,6 +56,13 @@ try:
     HAVE_MARKDOWNIFY = True
 except ImportError:
     HAVE_MARKDOWNIFY = False
+
+# --- Markdown→HTML変換（PDF出力用）。無ければPDF保存だけ使えなくする ---
+try:
+    import markdown as md_lib
+    HAVE_MARKDOWN_LIB = True
+except ImportError:
+    HAVE_MARKDOWN_LIB = False
 
 
 # =========================================================
@@ -233,6 +249,115 @@ def html_block_to_markdown(html):
 
 
 # =========================================================
+# Markdown → HTML → PDF（Edge / Chrome のヘッドレス印刷を利用）
+# =========================================================
+PDF_CSS = """
+@page { size: A4; margin: 15mm; }
+body {
+  font-family: "Yu Gothic", "游ゴシック", "Meiryo", "メイリオ", "MS PGothic", sans-serif;
+  font-size: 10.5pt; line-height: 1.7; color: #222;
+}
+h1, h2, h3, h4 { line-height: 1.35; margin: 1.2em 0 0.5em; }
+h1 { font-size: 1.7em; border-bottom: 2px solid #888; padding-bottom: 0.2em; }
+h2 { font-size: 1.4em; border-bottom: 1px solid #bbb; padding-bottom: 0.15em; }
+h3 { font-size: 1.2em; }
+table { border-collapse: collapse; margin: 0.8em 0; }
+th, td { border: 1px solid #888; padding: 4px 10px; vertical-align: top; }
+th { background: #eee; }
+tr { page-break-inside: avoid; }
+pre {
+  background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px;
+  padding: 8px 10px; white-space: pre-wrap; word-break: break-all;
+  font-size: 9.5pt; page-break-inside: avoid;
+}
+code { font-family: Consolas, "MS Gothic", monospace; background: #f5f5f5; }
+pre code { background: none; }
+blockquote { margin: 0.8em 0; padding: 0 1em; color: #555; border-left: 4px solid #ccc; }
+img { max-width: 100%; }
+"""
+
+
+def markdown_to_html(md_text):
+    """MarkdownをHTML文書に変換する（表・コードブロック対応）。"""
+    body = md_lib.markdown(
+        md_text,
+        extensions=["tables", "fenced_code", "sane_lists", "nl2br"],
+    )
+    return (
+        "<!DOCTYPE html>\n<html lang=\"ja\">\n<head>\n"
+        "<meta charset=\"utf-8\">\n<title>document</title>\n"
+        f"<style>{PDF_CSS}</style>\n</head>\n<body>\n{body}\n</body>\n</html>\n"
+    )
+
+
+def find_browser():
+    """PDF出力に使う Edge / Chrome の実行ファイルを探す。無ければNone。"""
+    roots = [
+        os.environ.get("ProgramFiles", r"C:\Program Files"),
+        os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"),
+        os.environ.get("LOCALAPPDATA", ""),
+    ]
+    rel_paths = [
+        r"Microsoft\Edge\Application\msedge.exe",
+        r"Google\Chrome\Application\chrome.exe",
+    ]
+    for rel in rel_paths:
+        for root in roots:
+            if root:
+                cand = os.path.join(root, rel)
+                if os.path.isfile(cand):
+                    return cand
+    for name in ("msedge", "chrome", "google-chrome", "chromium"):
+        found = shutil.which(name)
+        if found:
+            return found
+    return None
+
+
+def markdown_to_pdf(md_text, pdf_path):
+    """
+    MarkdownをPDFファイルとして保存する。
+    HTMLに変換 → Edge/Chromeのヘッドレスモードで「PDFに印刷」する方式。
+    日本語フォントや表の描画はブラウザ任せなので文字化けしにくい。
+    失敗したら RuntimeError を投げる。
+    """
+    browser = find_browser()
+    if browser is None:
+        raise RuntimeError("Edge / Chrome が見つかりませんでした。")
+
+    pdf_path = os.path.abspath(pdf_path)
+    if os.path.exists(pdf_path):
+        os.remove(pdf_path)  # 古いファイルが残って成功と誤判定しないように
+
+    with tempfile.TemporaryDirectory() as tmp:
+        html_file = Path(tmp) / "input.html"
+        html_file.write_text(markdown_to_html(md_text), encoding="utf-8")
+        profile_dir = Path(tmp) / "profile"  # 起動中のEdgeと干渉しないよう専用プロファイルを使う
+
+        cmd = [
+            browser,
+            "--headless",
+            "--disable-gpu",
+            "--no-first-run",
+            f"--user-data-dir={profile_dir}",
+            "--no-pdf-header-footer",
+            f"--print-to-pdf={pdf_path}",
+            html_file.as_uri(),
+        ]
+        try:
+            proc = subprocess.run(
+                cmd, capture_output=True, timeout=90,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("PDF作成がタイムアウトしました（90秒）。")
+
+    if not os.path.isfile(pdf_path) or os.path.getsize(pdf_path) == 0:
+        err = proc.stderr.decode("utf-8", errors="ignore").strip()[-300:]
+        raise RuntimeError("PDFが作成されませんでした。\n" + err)
+
+
+# =========================================================
 # GUI
 # =========================================================
 class App:
@@ -264,6 +389,11 @@ class App:
             command=self.save_result
         ).pack(side="left", padx=4)
 
+        ttk.Button(
+            top, text="PDFで保存",
+            command=self.save_pdf
+        ).pack(side="left", padx=4)
+
         self.status = ttk.Label(root, text=self._status_text(), foreground="#555")
         self.status.pack(fill="x", padx=8)
 
@@ -287,6 +417,8 @@ class App:
         parts = []
         parts.append("pywin32: " + ("OK" if HAVE_WIN32 else "未インストール"))
         parts.append("markdownify: " + ("OK" if HAVE_MARKDOWNIFY else "未インストール（表付きHTML変換不可）"))
+        parts.append("markdown(PDF用): " + ("OK" if HAVE_MARKDOWN_LIB else "未インストール"))
+        parts.append("Edge/Chrome: " + ("OK" if find_browser() else "見つからない"))
         return " / ".join(parts)
 
     def convert_from_clipboard(self):
@@ -356,6 +488,43 @@ class App:
             with open(path, "w", encoding="utf-8") as f:
                 f.write(text)
             messagebox.showinfo("完了", f"保存しました:\n{path}")
+
+    def save_pdf(self):
+        text = self.output_box.get("1.0", "end-1c")
+        if not text.strip():
+            messagebox.showinfo("情報", "PDFにする結果がありません。")
+            return
+        if not HAVE_MARKDOWN_LIB:
+            messagebox.showerror(
+                "エラー",
+                "markdownライブラリがインストールされていません。\n"
+                "コマンドプロンプトで下記を実行してください。\n\n"
+                "pip install markdown"
+            )
+            return
+        if find_browser() is None:
+            messagebox.showerror(
+                "エラー",
+                "PDF作成に使う Edge / Chrome が見つかりませんでした。\n"
+                "「.mdで保存」で保存し、別のツールでPDF化してください。"
+            )
+            return
+        path = filedialog.asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("PDF", "*.pdf"), ("すべてのファイル", "*.*")]
+        )
+        if not path:
+            return
+        self.root.config(cursor="watch")
+        self.root.update_idletasks()
+        try:
+            markdown_to_pdf(text, path)
+        except Exception as e:
+            messagebox.showerror("PDF作成に失敗", str(e))
+        else:
+            messagebox.showinfo("完了", f"PDFを保存しました:\n{path}")
+        finally:
+            self.root.config(cursor="")
 
 
 if __name__ == "__main__":
